@@ -69,9 +69,9 @@
   }
 
   const AI_SETTINGS = {
-    easy: { delay: 200, speed: 0.22, error: 0.2, ballSpeed: 0.55 },
+    easy: { delay: 170, speed: 0.25, error: 0.17, ballSpeed: 0.57 },
     normal: { delay: 120, speed: 0.33, error: 0.12, ballSpeed: 0.6 },
-    hard: { delay: 55, speed: 0.48, error: 0.05, ballSpeed: 0.68 }
+    hard: { delay: 100, speed: 0.36, error: 0.10, ballSpeed: 0.66 }
   };
 
   // ===== DOM Elements =====
@@ -102,7 +102,8 @@
   const menuBtnEnd = document.getElementById('menu-btn-end');
   const rewardedBtn = document.getElementById('rewarded-btn');
 
-  const volumeSlider = document.getElementById('volume-slider');
+  const sfxSlider = document.getElementById('sfx-slider');
+  const musicSlider = document.getElementById('music-slider');
   const diffBtns = document.querySelectorAll('.diff-btn');
   const modeBtns = document.querySelectorAll('.mode-btn');
   const controlsHint = document.getElementById('controls-hint');
@@ -124,7 +125,8 @@
   let ball = { x: 0.5, y: 0.5, vx: 0, vy: 0 };
   let pointerY = 0.5;
 
-  let volume = 0.5;
+  let sfxVolume = 0.5;
+  let musicVolume = 0.5;
   let soundMuted = false;
   let difficulty = 'normal';
   let backgroundColor = '#2e7d32';
@@ -218,6 +220,7 @@
       lastTime = performance.now();
       loop(lastTime);
     });
+    bgm.start();
   }
 
   function showMenu() {
@@ -233,6 +236,7 @@
     pauseScreen.classList.add('hidden');
     countdownScreen.classList.add('hidden');
     if (gameMenuBtn) gameMenuBtn.classList.add('hidden');
+    bgm.stop();
   }
 
   function pauseGame() {
@@ -242,6 +246,7 @@
     isPaused = true;
     if (gameMenuBtn) gameMenuBtn.classList.add('hidden');
     pauseScreen.classList.remove('hidden');
+    bgm.pause();
   }
 
   function resumeGame() {
@@ -252,10 +257,12 @@
     if (gameMenuBtn) gameMenuBtn.classList.remove('hidden');
     lastTime = performance.now();
     if (!twoPlayerMode) canvas.requestPointerLock();
+    bgm.resume();
   }
 
   function endGame(result) {
     Poki.gameplayStop();
+    bgm.stop();
     if (document.pointerLockElement) document.exitPointerLock();
     if (gameMenuBtn) gameMenuBtn.classList.add('hidden');
     gameRunning = false;
@@ -293,6 +300,7 @@
       loop(lastTime);
     });
     if (gameMenuBtn) gameMenuBtn.classList.remove('hidden');
+    bgm.start();
   }
 
   function updateScoreUI() {
@@ -599,9 +607,82 @@
   canvas.addEventListener('touchend', handleTouchEnd, { passive: true });
   canvas.addEventListener('touchcancel', handleTouchEnd, { passive: true });
 
+  // ===== Background Music (2nd request: upbeat arcade, melody + bass) =====
+  var bgm = (function () {
+    var ac = null;
+    var gainNode = null;
+    var intervalId = null;
+    var beatIndex = 0;
+    var melody = [659, 784, 988, 784, 659, 523, 659, 784, 988, 1175, 988, 784, 659, 523, 392, 523];
+    var bass   = [165, 0, 196, 0, 220, 0, 196, 0, 165, 0, 196, 0, 220, 247, 220, 196];
+    var beatMs = 180;
+
+    function playNote(freq, type, vol, dur) {
+      if (!ac || !gainNode || !freq || soundMuted || musicVolume <= 0) return;
+      try {
+        var o = ac.createOscillator();
+        var g = ac.createGain();
+        o.connect(g);
+        g.connect(gainNode);
+        o.type = type;
+        o.frequency.value = freq;
+        var t = ac.currentTime;
+        g.gain.setValueAtTime(vol * musicVolume, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+        o.start(t);
+        o.stop(t + dur);
+      } catch (_) {}
+    }
+
+    function tick() {
+      var idx = beatIndex % melody.length;
+      playNote(melody[idx], 'square', 0.045, 0.12);
+      playNote(bass[idx], 'triangle', 0.06, 0.15);
+      beatIndex++;
+    }
+
+    function start() {
+      try {
+        var C = window.AudioContext || window.webkitAudioContext;
+        if (!ac) ac = new C();
+        if (ac.state === 'suspended') ac.resume();
+        if (!gainNode) {
+          gainNode = ac.createGain();
+          gainNode.connect(ac.destination);
+          gainNode.gain.value = 0;
+        }
+        gainNode.gain.setValueAtTime(Math.max(0, musicVolume * 0.5), ac.currentTime);
+        beatIndex = 0;
+        if (intervalId) clearInterval(intervalId);
+        tick();
+        intervalId = setInterval(tick, beatMs);
+      } catch (_) {}
+    }
+
+    function stop() {
+      if (intervalId) { clearInterval(intervalId); intervalId = null; }
+      if (gainNode && ac) gainNode.gain.setValueAtTime(0, ac.currentTime);
+    }
+
+    function setGain() {
+      if (!gainNode || !ac) return;
+      gainNode.gain.setValueAtTime(soundMuted || musicVolume <= 0 ? 0 : musicVolume * 0.5, ac.currentTime);
+    }
+
+    function pause() {
+      if (gainNode && ac) gainNode.gain.setValueAtTime(0, ac.currentTime);
+    }
+
+    function resume() {
+      if (gainNode && ac && !soundMuted && musicVolume > 0) gainNode.gain.setValueAtTime(musicVolume * 0.5, ac.currentTime);
+    }
+
+    return { start: start, stop: stop, setGain: setGain, pause: pause, resume: resume };
+  })();
+
   // ===== Sound (Ping pong ball bounce) =====
   function sound(type) {
-    if (soundMuted || volume === 0) return;
+    if (soundMuted || sfxVolume === 0) return;
     try {
       const C = window.AudioContext || window.webkitAudioContext;
       if (!sound.ctx) sound.ctx = new C();
@@ -613,7 +694,7 @@
       o.type = 'sine';
 
       const t = ac.currentTime;
-      const vol = 0.08 * volume;
+      const vol = 0.08 * sfxVolume;
 
       switch (type) {
         case 'paddle':
@@ -678,30 +759,50 @@
           o.start(t);
           o.stop(t + 0.18);
           return;
+        case 'click':
+          o.frequency.setValueAtTime(800, t);
+          o.frequency.setValueAtTime(600, t + 0.03);
+          g.gain.setValueAtTime(vol * 0.7, t);
+          g.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+          o.start(t);
+          o.stop(t + 0.06);
+          return;
       }
     } catch (_) {}
   }
 
-  function setVolume(val) {
-    volume = Math.max(0, Math.min(1, val));
-    if (volumeSlider) volumeSlider.value = volume * 100;
-    if (volume === 0) soundMuted = true;
-    else if (soundMuted && volume > 0) soundMuted = false;
+  function setSfxVolume(val) {
+    sfxVolume = Math.max(0, Math.min(1, val));
+    if (sfxSlider) sfxSlider.value = sfxVolume * 100;
   }
 
-  var savedVolumeBeforeAd = 0.5;
+  function setMusicVolume(val) {
+    musicVolume = Math.max(0, Math.min(1, val));
+    if (musicSlider) musicSlider.value = musicVolume * 100;
+    bgm.setGain();
+  }
+
+  var savedSfxBeforeAd = 0.5;
+  var savedMusicBeforeAd = 0.5;
 
   function doPauseForAd() {
-    savedVolumeBeforeAd = volume || 0.5;
+    savedSfxBeforeAd = sfxVolume || 0.5;
+    savedMusicBeforeAd = musicVolume || 0.5;
     soundMuted = true;
-    volume = 0;
-    if (volumeSlider) volumeSlider.value = 0;
+    sfxVolume = 0;
+    musicVolume = 0;
+    if (sfxSlider) sfxSlider.value = 0;
+    if (musicSlider) musicSlider.value = 0;
+    bgm.pause();
   }
 
   function doResumeAfterAd() {
     soundMuted = false;
-    volume = savedVolumeBeforeAd;
-    if (volumeSlider) volumeSlider.value = Math.round(savedVolumeBeforeAd * 100);
+    sfxVolume = savedSfxBeforeAd;
+    musicVolume = savedMusicBeforeAd;
+    if (sfxSlider) sfxSlider.value = Math.round(savedSfxBeforeAd * 100);
+    if (musicSlider) musicSlider.value = Math.round(savedMusicBeforeAd * 100);
+    bgm.resume();
   }
 
   function doPlayWithBreak() {
@@ -765,9 +866,14 @@
     });
   }
 
-  if (volumeSlider) {
-    volumeSlider.addEventListener('input', function () {
-      setVolume(this.value / 100);
+  if (sfxSlider) {
+    sfxSlider.addEventListener('input', function () {
+      setSfxVolume(this.value / 100);
+    });
+  }
+  if (musicSlider) {
+    musicSlider.addEventListener('input', function () {
+      setMusicVolume(this.value / 100);
     });
   }
 
@@ -779,8 +885,10 @@
       controlsHint.innerHTML = twoPlayerMode
         ? 'P1: Left touch | P2: Right touch<br>Desktop: W/S, ↑/↓ | First to 10 wins!'
         : 'Move your mouse to control the paddle.<br>First to 10 wins!';
-      const dg = document.getElementById('difficulty-group');
+      var dg = document.getElementById('difficulty-group');
+      var dgMain = document.getElementById('difficulty-group-main');
       if (dg) dg.style.display = twoPlayerMode ? 'none' : 'flex';
+      if (dgMain) dgMain.style.display = twoPlayerMode ? 'none' : 'flex';
     });
   });
 
@@ -826,11 +934,17 @@
     document.querySelectorAll('.color-preset[data-target="p2"]').forEach(function (b) { b.classList.remove('active'); });
   });
 
-  diffBtns.forEach(function (btn) {
+  function syncDifficultyButtons(selectedDiff) {
+    document.querySelectorAll('.diff-btn').forEach(function (b) {
+      if (b.dataset.difficulty === selectedDiff) b.classList.add('active');
+      else b.classList.remove('active');
+    });
+  }
+
+  document.querySelectorAll('.diff-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      diffBtns.forEach(function (b) { b.classList.remove('active'); });
-      btn.classList.add('active');
       difficulty = btn.dataset.difficulty;
+      syncDifficultyButtons(difficulty);
     });
   });
 
@@ -868,6 +982,10 @@
   });
 
   // ===== Init =====
+  container.addEventListener('click', function (e) {
+    if (e.target.closest('button')) sound('click');
+  });
+
   Poki.init().then(function () {
     Poki.gameLoadingFinished();
     resize();
