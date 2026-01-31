@@ -8,7 +8,7 @@ HTML5 Canvas ping pong game. Play vs AI or 2 Player local. Customize difficulty,
 - **First to 10 wins**
 - **3-second countdown** before each round
 - **Settings Panel**: Difficulty, Background, Paddle colors, Sound
-- **Background colors**: 7 presets (빨주노초파남보) + custom picker
+- **Background colors**: 7 presets + custom picker
 - **Paddle colors**: P1/P2 presets + custom picker
 - **Pointer Lock**: vs AI mode - mouse stays in game area (ESC to pause)
 - **Pause with ESC** during gameplay
@@ -73,3 +73,4 @@ pingpong/
 ## License
 
 MIT License
+
