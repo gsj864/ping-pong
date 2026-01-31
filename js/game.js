@@ -638,8 +638,8 @@
 
     function tick() {
       var idx = beatIndex % melody.length;
-      playNote(melody[idx], 'square', 0.045, 0.12);
-      playNote(bass[idx], 'triangle', 0.06, 0.15);
+      playNote(melody[idx], 'square', 0.36, 0.12);
+      playNote(bass[idx], 'triangle', 0.48, 0.15);
       beatIndex++;
     }
 
@@ -653,7 +653,7 @@
           gainNode.connect(ac.destination);
           gainNode.gain.value = 0;
         }
-        gainNode.gain.setValueAtTime(Math.max(0, musicVolume * 0.5), ac.currentTime);
+        gainNode.gain.setValueAtTime(Math.max(0, musicVolume * 1.5), ac.currentTime);
         beatIndex = 0;
         if (intervalId) clearInterval(intervalId);
         tick();
@@ -668,7 +668,7 @@
 
     function setGain() {
       if (!gainNode || !ac) return;
-      gainNode.gain.setValueAtTime(soundMuted || musicVolume <= 0 ? 0 : musicVolume * 0.5, ac.currentTime);
+      gainNode.gain.setValueAtTime(soundMuted || musicVolume <= 0 ? 0 : musicVolume * 1.5, ac.currentTime);
     }
 
     function pause() {
@@ -676,7 +676,7 @@
     }
 
     function resume() {
-      if (gainNode && ac && !soundMuted && musicVolume > 0) gainNode.gain.setValueAtTime(musicVolume * 0.5, ac.currentTime);
+      if (gainNode && ac && !soundMuted && musicVolume > 0) gainNode.gain.setValueAtTime(musicVolume * 1.5, ac.currentTime);
     }
 
     return { start: start, stop: stop, setGain: setGain, pause: pause, resume: resume };
@@ -696,7 +696,7 @@
       o.type = 'sine';
 
       const t = ac.currentTime;
-      const vol = 0.08 * sfxVolume;
+      const vol = 0.88 * sfxVolume;
 
       switch (type) {
         case 'paddle':
@@ -764,7 +764,7 @@
         case 'click':
           o.frequency.setValueAtTime(800, t);
           o.frequency.setValueAtTime(600, t + 0.03);
-          g.gain.setValueAtTime(vol * 0.7, t);
+          g.gain.setValueAtTime(vol, t);
           g.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
           o.start(t);
           o.stop(t + 0.06);
