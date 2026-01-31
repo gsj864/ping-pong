@@ -102,6 +102,9 @@
   let twoPlayerMode = false;
   let settingsOpenedFrom = 'start';
   const keys = { p1Up: false, p1Down: false, p2Up: false, p2Down: false };
+  let touchP1Y = null;
+  let touchP2Y = null;
+  const touchMap = {};
 
   // ===== Resize =====
   function resize() {
@@ -165,6 +168,8 @@
   function startGame() {
     twoPlayerMode = document.querySelector('.mode-btn.active').dataset.mode === '2p';
     keys.p1Up = keys.p1Down = keys.p2Up = keys.p2Down = false;
+    touchP1Y = touchP2Y = null;
+    Object.keys(touchMap).forEach(function (k) { delete touchMap[k]; });
     scoreLeft = 0;
     scoreRight = 0;
     updateScoreUI();
@@ -299,11 +304,14 @@
       return;
     }
 
-    // Player 1 (left paddle)
     prevPlayerY = playerY;
     if (twoPlayerMode) {
-      if (keys.p1Up) playerY -= PADDLE_KEYBOARD_SPEED * dtNorm;
-      if (keys.p1Down) playerY += PADDLE_KEYBOARD_SPEED * dtNorm;
+      if (touchP1Y !== null) {
+        playerY += (touchP1Y - playerY) * 0.4;
+      } else {
+        if (keys.p1Up) playerY -= PADDLE_KEYBOARD_SPEED * dtNorm;
+        if (keys.p1Down) playerY += PADDLE_KEYBOARD_SPEED * dtNorm;
+      }
     } else {
       playerY += (pointerY - playerY) * 0.35;
     }
@@ -313,8 +321,12 @@
     // Player 2 / AI (right paddle)
     prevAiY = aiY;
     if (twoPlayerMode) {
-      if (keys.p2Up) aiY -= PADDLE_KEYBOARD_SPEED * dtNorm;
-      if (keys.p2Down) aiY += PADDLE_KEYBOARD_SPEED * dtNorm;
+      if (touchP2Y !== null) {
+        aiY += (touchP2Y - aiY) * 0.4;
+      } else {
+        if (keys.p2Up) aiY -= PADDLE_KEYBOARD_SPEED * dtNorm;
+        if (keys.p2Down) aiY += PADDLE_KEYBOARD_SPEED * dtNorm;
+      }
       aiY = Math.max(0.12, Math.min(0.88, aiY));
       aiVelY = (aiY - prevAiY) / dtNorm;
     } else {
@@ -468,16 +480,61 @@
     }
   });
 
+  function getTouchY(clientY) {
+    const rect = canvas.getBoundingClientRect();
+    return Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
+  }
+
+  function getTouchSide(clientX) {
+    const rect = canvas.getBoundingClientRect();
+    return clientX - rect.left < rect.width / 2 ? 'p1' : 'p2';
+  }
+
   canvas.addEventListener('touchstart', function (e) {
-    if (e.touches.length) setPointer(e.touches[0].clientY);
+    if (!gameRunning || isPaused) return;
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const t = e.changedTouches[i];
+      const side = getTouchSide(t.clientX);
+      touchMap[t.identifier] = side;
+      const y = getTouchY(t.clientY);
+      if (side === 'p1') touchP1Y = y;
+      else touchP2Y = y;
+    }
+    if (!twoPlayerMode && e.touches.length) setPointer(e.touches[0].clientY);
   }, { passive: true });
 
   canvas.addEventListener('touchmove', function (e) {
-    if (e.touches.length) {
+    if (!gameRunning || isPaused) return;
+    let handled = false;
+    for (let i = 0; i < e.touches.length; i++) {
+      const t = e.touches[i];
+      const side = touchMap[t.identifier];
+      if (side) {
+        handled = true;
+        const y = getTouchY(t.clientY);
+        if (side === 'p1') touchP1Y = y;
+        else touchP2Y = y;
+      }
+    }
+    if (twoPlayerMode && handled) e.preventDefault();
+    if (!twoPlayerMode && e.touches.length) {
       e.preventDefault();
       setPointer(e.touches[0].clientY);
     }
   }, { passive: false });
+
+  function handleTouchEnd(e) {
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const id = e.changedTouches[i].identifier;
+      const side = touchMap[id];
+      delete touchMap[id];
+      if (side === 'p1' && !Object.values(touchMap).some(function (s) { return s === 'p1'; })) touchP1Y = null;
+      if (side === 'p2' && !Object.values(touchMap).some(function (s) { return s === 'p2'; })) touchP2Y = null;
+    }
+  }
+
+  canvas.addEventListener('touchend', handleTouchEnd, { passive: true });
+  canvas.addEventListener('touchcancel', handleTouchEnd, { passive: true });
 
   // ===== Sound (Ping pong ball bounce) =====
   function sound(type) {
@@ -614,7 +671,7 @@
       btn.classList.add('active');
       twoPlayerMode = btn.dataset.mode === '2p';
       controlsHint.innerHTML = twoPlayerMode
-        ? 'P1: W/S | P2: ↑/↓<br>First to 10 wins!'
+        ? 'P1: Left touch | P2: Right touch<br>Desktop: W/S, ↑/↓ | First to 10 wins!'
         : 'Move your mouse to control the paddle.<br>First to 10 wins!';
       const dg = document.getElementById('difficulty-group');
       if (dg) dg.style.display = twoPlayerMode ? 'none' : 'flex';
