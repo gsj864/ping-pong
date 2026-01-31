@@ -1,4 +1,4 @@
-# Ping Pong - Free Online Game
+# Edge Pong - Free Game
 
 HTML5 Canvas ping pong game. Play vs AI or 2 Player local. Customize difficulty, colors, and sound.
 
