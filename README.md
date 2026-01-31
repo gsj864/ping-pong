@@ -1,33 +1,44 @@
 # Ping Pong - Free Online Game
 
-A polished HTML5 Canvas ping pong game designed for Poki publishing. Play against AI with smooth controls and beautiful visuals.
+HTML5 Canvas ping pong game. Play vs AI or 2 Player local. Customize difficulty, colors, and sound.
 
 ## Features
 
-- **First to 10 wins** scoring system
+- **Game Modes**: vs AI (Mouse) / 2 Player (Keyboard)
+- **First to 10 wins**
 - **3-second countdown** before each round
-- **Difficulty levels**: Easy, Normal, Hard
-- **Volume control** slider in menu and pause screen
-- **Mute toggle** button during gameplay
-- **Pause with ESC** key or pause button
+- **Settings Panel**: Difficulty, Background, Paddle colors, Sound
+- **Background colors**: 7 presets (빨주노초파남보) + custom picker
+- **Paddle colors**: P1/P2 presets + custom picker
+- **Pointer Lock**: vs AI mode - mouse stays in game area (ESC to pause)
+- **Pause with ESC** during gameplay
+- **Touch controls** for mobile (vs AI mode)
 - **Responsive design** for desktop and mobile
-- **Touch controls** for mobile devices
-- **Smooth paddle physics** with spin mechanics
+- **Paddle physics** with spin and speed effects
 
 ## How to Play
 
-- **Desktop**: Move mouse to control your paddle (left side)
-- **Mobile**: Touch and drag to move paddle
-- **ESC**: Pause / Resume game
-- First player to reach 10 points wins!
+- **vs AI**: Move mouse to control paddle (left side). First to 10 wins!
+- **2 Player**: P1 uses W/S, P2 uses ↑/↓ arrows.
+- **ESC**: Pause / Resume
+- **Settings**: Open from start screen or pause screen
 
 ## Controls
 
-| Action | Desktop | Mobile |
-|--------|---------|--------|
-| Move Paddle | Mouse Y | Touch Y |
-| Pause | ESC / Button | Button |
-| Mute | 🔊 Button | 🔊 Button |
+| Mode | P1 (Left) | P2 (Right) |
+|------|-----------|------------|
+| vs AI | Mouse Y | AI |
+| 2 Player | W / S | ↑ / ↓ |
+
+## Settings
+
+| Option | Description |
+|--------|-------------|
+| Difficulty | Easy, Normal, Hard (AI speed & reaction) |
+| Background | Red, Orange, Yellow, Green, Blue, Indigo, Violet + Custom |
+| Left Paddle | 6 presets + Custom color |
+| Right Paddle | 6 presets + Custom color |
+| Sound | Volume slider |
 
 ## Running Locally
 
@@ -43,11 +54,11 @@ Then open `http://localhost:8080` in your browser.
 
 ```
 pingpong/
-├── index.html      # Main HTML with overlay screens
+├── index.html      # Main HTML, overlays, settings panel
 ├── css/
-│   └── style.css   # Poki-quality styling
+│   └── style.css   # Styling
 ├── js/
-│   └── game.js     # Game logic, AI, physics
+│   └── game.js     # Game logic, AI, physics, colors
 └── README.md
 ```
 
@@ -55,17 +66,9 @@ pingpong/
 
 - HTML5 Canvas
 - Vanilla JavaScript
-- CSS3 with Google Fonts
-- Web Audio API for sound effects
+- CSS3, Google Fonts
+- Web Audio API for sound
 - No external dependencies
-
-## Poki Publishing
-
-This game is designed for Poki platform:
-- Fullscreen responsive canvas
-- Touch-friendly controls
-- No ads or external resources
-- Static file deployment ready
 
 ## License
 
