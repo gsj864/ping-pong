@@ -295,6 +295,7 @@ html, body {
 
 input[type="range"] {
   -webkit-appearance: none;
+  appearance: none;
   width: 160px;
   height: 6px;
   background: rgba(255,255,255,0.15);
@@ -304,6 +305,7 @@ input[type="range"] {
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
+  appearance: none;
   width: 20px;
   height: 20px;
   background: linear-gradient(135deg, #7c4dff 0%, #448aff 100%);
