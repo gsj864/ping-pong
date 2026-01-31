@@ -1,5 +1,33 @@
 /* ===== Ping Pong - Poki Quality ===== */
-@import url('https://fonts.googleapis.com/css2?family=Russo+One&family=Poppins:wght@400;600;700&display=swap');
+/* Local fonts (Poki: no external resources) */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/poppins-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../fonts/poppins-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/poppins-700.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Russo One';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/russo-one.woff2') format('woff2');
+}
 
 * {
   margin: 0;
@@ -408,6 +436,28 @@ input[type="range"]::-moz-range-thumb {
 .btn-secondary:hover {
   background: rgba(255,255,255,0.18);
   border-color: rgba(255,255,255,0.35);
+}
+
+.btn-rewarded {
+  padding: 14px 28px;
+  font-size: 15px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #7c4dff 0%, #448aff 100%);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(124, 77, 255, 0.3);
+}
+
+.btn-rewarded:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(124, 77, 255, 0.4);
+}
+
+.btn-rewarded.hidden {
+  display: none !important;
 }
 
 /* ===== Countdown ===== */

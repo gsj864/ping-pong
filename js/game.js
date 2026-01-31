@@ -1,9 +1,38 @@
 /**
  * Ping Pong - Poki Quality Edition
  * First to 10, paddle speed → ball speed, spin, fullscreen
+ * Poki SDK: Commercial Break, Rewarded Break
  */
 (function () {
   'use strict';
+
+  // ===== Poki SDK Wrapper (no-op when SDK not loaded) =====
+  var Poki = {
+    ok: false,
+    init: function () {
+      if (typeof PokiSDK === 'undefined') return Promise.resolve();
+      return PokiSDK.init().then(function () { Poki.ok = true; }).catch(function () {});
+    },
+    gameLoadingFinished: function () {
+      if (Poki.ok && PokiSDK.gameLoadingFinished) PokiSDK.gameLoadingFinished();
+    },
+    gameplayStart: function () {
+      if (Poki.ok && PokiSDK.gameplayStart) PokiSDK.gameplayStart();
+    },
+    gameplayStop: function () {
+      if (Poki.ok && PokiSDK.gameplayStop) PokiSDK.gameplayStop();
+    },
+    commercialBreak: function (onPause) {
+      if (!Poki.ok || !PokiSDK.commercialBreak) return Promise.resolve();
+      return PokiSDK.commercialBreak(typeof onPause === 'function' ? onPause : function () {});
+    },
+    rewardedBreak: function (opts) {
+      if (!Poki.ok || !PokiSDK.rewardedBreak) return Promise.resolve(false);
+      if (typeof opts === 'function') opts = { onStart: opts };
+      var p = PokiSDK.rewardedBreak(opts || {});
+      return p && typeof p.then === 'function' ? p.then(function (s) { return !!s; }) : Promise.resolve(false);
+    }
+  };
 
   // ===== Constants =====
   const WIN_SCORE = 10;
@@ -71,6 +100,7 @@
   const replayBtn = document.getElementById('replay-btn');
   const menuBtnPause = document.getElementById('menu-btn-pause');
   const menuBtnEnd = document.getElementById('menu-btn-end');
+  const rewardedBtn = document.getElementById('rewarded-btn');
 
   const volumeSlider = document.getElementById('volume-slider');
   const diffBtns = document.querySelectorAll('.diff-btn');
@@ -191,6 +221,7 @@
   }
 
   function showMenu() {
+    Poki.gameplayStop();
     if (document.pointerLockElement) document.exitPointerLock();
     gameRunning = false;
     isPaused = false;
@@ -206,6 +237,7 @@
 
   function pauseGame() {
     if (!gameRunning || isPaused || countdownActive) return;
+    Poki.gameplayStop();
     if (document.pointerLockElement) document.exitPointerLock();
     isPaused = true;
     if (gameMenuBtn) gameMenuBtn.classList.add('hidden');
@@ -215,6 +247,7 @@
   function resumeGame() {
     if (!isPaused) return;
     isPaused = false;
+    Poki.gameplayStart();
     pauseScreen.classList.add('hidden');
     if (gameMenuBtn) gameMenuBtn.classList.remove('hidden');
     lastTime = performance.now();
@@ -222,6 +255,7 @@
   }
 
   function endGame(result) {
+    Poki.gameplayStop();
     if (document.pointerLockElement) document.exitPointerLock();
     if (gameMenuBtn) gameMenuBtn.classList.add('hidden');
     gameRunning = false;
@@ -236,6 +270,10 @@
     else endTitle.textContent = result ? 'YOU WIN!' : 'YOU LOSE';
     endScoreEl.textContent = scoreLeft + ' - ' + scoreRight;
     sound(isWin ? 'win' : 'lose');
+    var showRewarded = !isWin && !twoPlayerMode && rewardedBtn;
+    if (rewardedBtn) {
+      rewardedBtn.classList.toggle('hidden', !showRewarded);
+    }
   }
 
   function updateScoreUI() {
@@ -632,9 +670,52 @@
     else if (soundMuted && volume > 0) soundMuted = false;
   }
 
+  var savedVolumeBeforeAd = 0.5;
+
+  function doPauseForAd() {
+    savedVolumeBeforeAd = volume || 0.5;
+    soundMuted = true;
+    volume = 0;
+    if (volumeSlider) volumeSlider.value = 0;
+  }
+
+  function doResumeAfterAd() {
+    soundMuted = false;
+    volume = savedVolumeBeforeAd;
+    if (volumeSlider) volumeSlider.value = Math.round(savedVolumeBeforeAd * 100);
+  }
+
+  function doPlayWithBreak() {
+    Poki.commercialBreak(doPauseForAd).then(function () {
+      doResumeAfterAd();
+      Poki.gameplayStart();
+      startGame();
+    });
+  }
+
+  function doReplayWithBreak() {
+    Poki.commercialBreak(doPauseForAd).then(function () {
+      doResumeAfterAd();
+      Poki.gameplayStart();
+      startGame();
+    });
+  }
+
+  function doRewardedRematch() {
+    Poki.rewardedBreak({ onStart: doPauseForAd }).then(function (success) {
+      doResumeAfterAd();
+      if (success) {
+        Poki.gameplayStart();
+        startGame();
+        if (rewardedBtn) rewardedBtn.classList.add('hidden');
+      }
+    });
+  }
+
   // ===== Events =====
-  playBtn.addEventListener('click', startGame);
-  replayBtn.addEventListener('click', startGame);
+  playBtn.addEventListener('click', doPlayWithBreak);
+  replayBtn.addEventListener('click', doReplayWithBreak);
+  if (rewardedBtn) rewardedBtn.addEventListener('click', doRewardedRematch);
   resumeBtn.addEventListener('click', resumeGame);
   menuBtnPause.addEventListener('click', showMenu);
   if (gameMenuBtn) gameMenuBtn.addEventListener('click', pauseGame);
@@ -769,6 +850,9 @@
   });
 
   // ===== Init =====
-  resize();
-  draw();
+  Poki.init().then(function () {
+    Poki.gameLoadingFinished();
+    resize();
+    draw();
+  });
 })();
