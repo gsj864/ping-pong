@@ -1,0 +1,423 @@
+/* ===== Ping Pong - Poki Quality ===== */
+@import url('https://fonts.googleapis.com/css2?family=Russo+One&family=Poppins:wght@400;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Poppins', sans-serif;
+  background: #1a1a2e;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+  user-select: none;
+}
+
+#game-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+}
+
+#canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: none;
+}
+
+/* ===== HUD ===== */
+#hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+#score {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(0,0,0,0.4);
+  padding: 8px 28px;
+  border-radius: 50px;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.score-num {
+  font-family: 'Russo One', sans-serif;
+  font-size: 32px;
+  color: #fff;
+  min-width: 40px;
+  text-align: center;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+#score-left { color: #4fc3f7; }
+#score-right { color: #ff7043; }
+
+#score-sep {
+  font-size: 24px;
+  color: rgba(255,255,255,0.5);
+}
+
+/* ===== Overlays ===== */
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 20, 0.92);
+  backdrop-filter: blur(12px);
+  z-index: 20;
+}
+
+.overlay.hidden { display: none; }
+
+#settings-panel {
+  z-index: 25;
+}
+
+.start-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.settings-content {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.overlay-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 32px;
+  max-width: 420px;
+  width: 90%;
+}
+
+/* ===== Start Screen ===== */
+.game-title {
+  font-family: 'Russo One', sans-serif;
+  font-size: clamp(48px, 12vw, 72px);
+  color: #fff;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+  text-shadow: 0 4px 24px rgba(79, 195, 247, 0.4);
+  background: linear-gradient(135deg, #4fc3f7 0%, #7c4dff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.game-subtitle {
+  font-size: 16px;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.overlay-title {
+  font-family: 'Russo One', sans-serif;
+  font-size: 42px;
+  color: #fff;
+  margin-bottom: 24px;
+  letter-spacing: 0.05em;
+}
+
+/* ===== Settings ===== */
+.settings-group {
+  width: 100%;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.setting-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.mode-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.mode-btn {
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+  background: rgba(255,255,255,0.08);
+  border: 2px solid rgba(255,255,255,0.15);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mode-btn:hover {
+  background: rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.3);
+  color: #fff;
+}
+
+.mode-btn.active {
+  background: linear-gradient(135deg, #7c4dff 0%, #448aff 100%);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(124, 77, 255, 0.4);
+}
+
+.color-preset-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.color-preset {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+  transition: all 0.2s;
+}
+
+.color-preset:hover {
+  transform: scale(1.1);
+  border-color: #fff;
+}
+
+.color-preset.active {
+  border-color: #ffd54f;
+  box-shadow: 0 0 10px rgba(255,213,79,0.6);
+}
+
+.color-picker-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  color: rgba(255,255,255,0.8);
+}
+
+.color-picker-wrap input[type="color"] {
+  width: 36px;
+  height: 36px;
+  padding: 2px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.color-picker-wrap input[type="color"]::-webkit-color-swatch-wrapper { padding: 2px; }
+.color-picker-wrap input[type="color"]::-webkit-color-swatch { border-radius: 4px; border: none; }
+
+.difficulty-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.diff-btn {
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+  background: rgba(255,255,255,0.08);
+  border: 2px solid rgba(255,255,255,0.15);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.diff-btn:hover {
+  background: rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.3);
+  color: #fff;
+}
+
+.diff-btn.active {
+  background: linear-gradient(135deg, #7c4dff 0%, #448aff 100%);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(124, 77, 255, 0.4);
+}
+
+/* Volume Slider */
+.volume-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+}
+
+.vol-icon {
+  font-size: 18px;
+  opacity: 0.6;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 160px;
+  height: 6px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 3px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #7c4dff 0%, #448aff 100%);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(124, 77, 255, 0.5);
+  transition: transform 0.15s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #7c4dff 0%, #448aff 100%);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+/* ===== Buttons ===== */
+.btn-primary, .btn-secondary {
+  padding: 16px 48px;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #ffd54f 0%, #ffb300 100%);
+  color: #1a1a2e;
+  box-shadow: 0 6px 0 #ff8f00, 0 8px 24px rgba(255, 179, 0, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 0 #ff8f00, 0 12px 32px rgba(255, 179, 0, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(2px);
+  box-shadow: 0 4px 0 #ff8f00, 0 6px 16px rgba(255, 179, 0, 0.3);
+}
+
+.btn-secondary {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 2px solid rgba(255,255,255,0.2);
+}
+
+.btn-secondary:hover {
+  background: rgba(255,255,255,0.18);
+  border-color: rgba(255,255,255,0.35);
+}
+
+/* ===== Countdown ===== */
+#countdown-screen {
+  background: rgba(10, 10, 20, 0.85);
+}
+
+.countdown-number {
+  font-family: 'Russo One', sans-serif;
+  font-size: clamp(100px, 30vw, 200px);
+  color: #fff;
+  text-shadow: 0 0 60px rgba(79, 195, 247, 0.8), 0 0 120px rgba(124, 77, 255, 0.5);
+  animation: countPulse 1s ease-in-out infinite;
+}
+
+@keyframes countPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+}
+
+/* ===== Pause & End ===== */
+.pause-buttons, .end-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.end-score {
+  font-family: 'Russo One', sans-serif;
+  font-size: 28px;
+  color: rgba(255,255,255,0.8);
+  margin-bottom: 28px;
+}
+
+#end-screen.win .overlay-title {
+  color: #4fc3f7;
+  text-shadow: 0 0 30px rgba(79, 195, 247, 0.6);
+}
+
+#end-screen.lose .overlay-title {
+  color: #ff7043;
+  text-shadow: 0 0 30px rgba(255, 112, 67, 0.6);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 480px) {
+  .score-num { font-size: 26px; }
+  #score { padding: 6px 20px; gap: 8px; }
+  .icon-btn { width: 42px; height: 42px; font-size: 18px; }
+  .overlay-content { padding: 24px 16px; }
+  .game-subtitle { font-size: 14px; margin-bottom: 24px; }
+  .diff-btn { padding: 10px 18px; font-size: 13px; }
+  .btn-primary, .btn-secondary { padding: 14px 36px; font-size: 16px; }
+  input[type="range"] { width: 120px; }
+  .overlay-title { font-size: 32px; }
+}
