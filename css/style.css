@@ -32,6 +32,49 @@ html, body {
   cursor: none;
 }
 
+/* ===== Game Menu Button (Mobile-friendly) ===== */
+.game-menu-btn {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  width: 48px;
+  height: 48px;
+  font-size: 24px;
+  font-weight: bold;
+  color: rgba(255,255,255,0.9);
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 12px;
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.2s, transform 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.game-menu-btn:hover {
+  background: rgba(0,0,0,0.5);
+  transform: scale(1.05);
+}
+
+.game-menu-btn:active {
+  transform: scale(0.98);
+}
+
+.game-menu-btn.hidden {
+  display: none !important;
+}
+
+@media (min-width: 769px) {
+  .game-menu-btn {
+    bottom: 20px;
+    right: 20px;
+  }
+}
+
 /* ===== HUD ===== */
 #hud {
   position: absolute;

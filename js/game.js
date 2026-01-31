@@ -62,6 +62,7 @@
   const endScoreEl = document.getElementById('end-score');
 
   const playBtn = document.getElementById('play-btn');
+  const gameMenuBtn = document.getElementById('game-menu-btn');
   const settingsBtn = document.getElementById('settings-btn');
   const settingsBtnPause = document.getElementById('settings-btn-pause');
   const settingsPanel = document.getElementById('settings-panel');
@@ -154,6 +155,7 @@
           setTimeout(function () {
             countdownScreen.classList.add('hidden');
             countdownActive = false;
+            if (gameMenuBtn) gameMenuBtn.classList.remove('hidden');
             callback();
           }, 400);
         }
@@ -199,12 +201,14 @@
     endScreen.classList.add('hidden');
     pauseScreen.classList.add('hidden');
     countdownScreen.classList.add('hidden');
+    if (gameMenuBtn) gameMenuBtn.classList.add('hidden');
   }
 
   function pauseGame() {
     if (!gameRunning || isPaused || countdownActive) return;
     if (document.pointerLockElement) document.exitPointerLock();
     isPaused = true;
+    if (gameMenuBtn) gameMenuBtn.classList.add('hidden');
     pauseScreen.classList.remove('hidden');
   }
 
@@ -212,12 +216,14 @@
     if (!isPaused) return;
     isPaused = false;
     pauseScreen.classList.add('hidden');
+    if (gameMenuBtn) gameMenuBtn.classList.remove('hidden');
     lastTime = performance.now();
     if (!twoPlayerMode) canvas.requestPointerLock();
   }
 
   function endGame(result) {
     if (document.pointerLockElement) document.exitPointerLock();
+    if (gameMenuBtn) gameMenuBtn.classList.add('hidden');
     gameRunning = false;
     if (animId) cancelAnimationFrame(animId);
     animId = 0;
@@ -631,6 +637,7 @@
   replayBtn.addEventListener('click', startGame);
   resumeBtn.addEventListener('click', resumeGame);
   menuBtnPause.addEventListener('click', showMenu);
+  if (gameMenuBtn) gameMenuBtn.addEventListener('click', pauseGame);
   menuBtnEnd.addEventListener('click', showMenu);
 
   if (settingsBtn) {
@@ -730,6 +737,12 @@
 
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') {
+      var settingsOpen = settingsPanel && !settingsPanel.classList.contains('hidden');
+      var pauseOpen = pauseScreen && !pauseScreen.classList.contains('hidden');
+      if (settingsOpen || pauseOpen) {
+        e.preventDefault();
+        return;
+      }
       if (gameRunning && !isPaused && !countdownActive) {
         pauseGame();
       } else if (isPaused) {
