@@ -73,4 +73,3 @@ pingpong/
 ## License
 
 MIT License
-

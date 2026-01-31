@@ -38,6 +38,7 @@
 html, body {
   width: 100%;
   height: 100%;
+  min-height: 100%;
   overflow: hidden;
   font-family: 'Poppins', sans-serif;
   background: #1a1a2e;
@@ -47,16 +48,23 @@ html, body {
 }
 
 #game-container {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  min-width: 100%;
+  min-height: 100%;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  overflow: hidden;
 }
 
 #canvas {
   display: block;
   width: 100%;
   height: 100%;
+  min-width: 100%;
+  min-height: 100%;
   cursor: none;
 }
 
@@ -154,6 +162,10 @@ html, body {
   background: rgba(10, 10, 20, 0.92);
   backdrop-filter: blur(12px);
   z-index: 20;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 12px;
+  box-sizing: border-box;
 }
 
 .overlay.hidden { display: none; }
@@ -164,8 +176,8 @@ html, body {
 
 .start-buttons {
   display: flex;
-  gap: 12px;
-  margin-top: 8px;
+  gap: clamp(8px, 2vw, 12px);
+  margin-top: clamp(8px, 2vh, 12px);
   flex-wrap: wrap;
   justify-content: center;
 }
@@ -180,30 +192,33 @@ html, body {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 32px;
+  padding: 24px 20px;
   max-width: 420px;
-  width: 90%;
+  width: 100%;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 /* ===== Start Screen ===== */
 .game-title {
   font-family: 'Russo One', sans-serif;
-  font-size: clamp(48px, 12vw, 72px);
+  font-size: clamp(36px, 10vw, 72px);
   color: #fff;
   letter-spacing: 0.08em;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   text-shadow: 0 4px 24px rgba(79, 195, 247, 0.4);
   background: linear-gradient(135deg, #4fc3f7 0%, #7c4dff 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  line-height: 1.1;
 }
 
 .game-subtitle {
-  font-size: 16px;
+  font-size: clamp(12px, 2.5vw, 16px);
   color: rgba(255,255,255,0.7);
-  margin-bottom: 32px;
-  line-height: 1.6;
+  margin-bottom: clamp(16px, 4vh, 32px);
+  line-height: 1.5;
 }
 
 .overlay-title {
@@ -217,10 +232,12 @@ html, body {
 /* ===== Settings ===== */
 .settings-group {
   width: 100%;
-  margin-bottom: 24px;
+  max-width: 100%;
+  margin-bottom: clamp(12px, 3vh, 24px);
   display: flex;
   flex-direction: column;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .setting-label {
@@ -236,14 +253,14 @@ html, body {
 
 .mode-buttons {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   justify-content: center;
   flex-wrap: wrap;
 }
 
 .mode-btn {
-  padding: 10px 18px;
-  font-size: 13px;
+  padding: clamp(6px, 1.5vh, 10px) clamp(12px, 3vw, 18px);
+  font-size: clamp(11px, 2.2vw, 13px);
   font-weight: 600;
   color: rgba(255,255,255,0.7);
   background: rgba(255,255,255,0.08);
@@ -322,13 +339,14 @@ html, body {
 
 .difficulty-buttons {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   justify-content: center;
+  flex-wrap: wrap;
 }
 
 .diff-btn {
-  padding: 12px 24px;
-  font-size: 14px;
+  padding: clamp(8px, 2vh, 12px) clamp(14px, 3vw, 24px);
+  font-size: clamp(12px, 2.5vw, 14px);
   font-weight: 600;
   color: rgba(255,255,255,0.7);
   background: rgba(255,255,255,0.08);
@@ -401,8 +419,8 @@ input[type="range"]::-moz-range-thumb {
 
 /* ===== Buttons ===== */
 .btn-primary, .btn-secondary {
-  padding: 16px 48px;
-  font-size: 18px;
+  padding: clamp(10px, 2.5vh, 16px) clamp(24px, 6vw, 48px);
+  font-size: clamp(14px, 3vw, 18px);
   font-weight: 700;
   letter-spacing: 0.08em;
   border: none;
@@ -505,14 +523,33 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ===== Responsive ===== */
-@media (max-width: 480px) {
-  .score-num { font-size: 26px; }
-  #score { padding: 6px 20px; gap: 8px; }
-  .icon-btn { width: 42px; height: 42px; font-size: 18px; }
-  .overlay-content { padding: 24px 16px; }
-  .game-subtitle { font-size: 14px; margin-bottom: 24px; }
-  .diff-btn { padding: 10px 18px; font-size: 13px; }
-  .btn-primary, .btn-secondary { padding: 14px 36px; font-size: 16px; }
-  input[type="range"] { width: 120px; }
-  .overlay-title { font-size: 32px; }
+@media (max-width: 480px), (max-height: 420px) {
+  .score-num { font-size: 22px; }
+  #score { padding: 4px 14px; gap: 6px; }
+  .overlay-content { padding: 16px 12px; }
+  .game-title { font-size: 32px; }
+  .game-subtitle { font-size: 12px; margin-bottom: 12px; }
+  .setting-label { font-size: 10px; margin-bottom: 8px; }
+  .mode-btn { padding: 6px 12px; font-size: 11px; }
+  .diff-btn { padding: 6px 14px; font-size: 12px; }
+  .btn-primary, .btn-secondary { padding: 10px 24px; font-size: 14px; }
+  input[type="range"] { width: 100px; }
+  .overlay-title { font-size: 28px; }
+  .color-preset { width: 28px; height: 28px; font-size: 9px; }
+  .color-picker-wrap input[type="color"] { width: 28px; height: 28px; }
+  .countdown-number { font-size: 60px; }
+  .end-score { font-size: 22px; margin-bottom: 16px; }
+  .game-menu-btn { width: 40px; height: 40px; font-size: 20px; bottom: 12px; right: 12px; }
+}
+
+/* Very small screens (e.g. Poki 640x360) */
+@media (max-width: 700px) and (max-height: 420px) {
+  .overlay {
+    padding: 8px;
+  }
+  .overlay-content {
+    transform: scale(0.72);
+    transform-origin: center center;
+    padding: 8px 12px;
+  }
 }

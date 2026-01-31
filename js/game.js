@@ -141,8 +141,10 @@
 
   // ===== Resize =====
   function resize() {
-    W = canvas.width = container.clientWidth;
-    H = canvas.height = container.clientHeight;
+    var cw = container.clientWidth;
+    var ch = container.clientHeight;
+    W = canvas.width = cw;
+    H = canvas.height = ch;
     paddleH = H * PADDLE_H_RATIO;
     leftX = PADDLE_W + 20;
     rightX = W - PADDLE_W - 20;
@@ -948,6 +950,14 @@
     });
   });
 
+  document.addEventListener('pointerlockchange', function () {
+    if (!document.pointerLockElement && gameRunning && !isPaused && !countdownActive && !twoPlayerMode) {
+      var settingsOpen = settingsPanel && !settingsPanel.classList.contains('hidden');
+      var pauseOpen = pauseScreen && !pauseScreen.classList.contains('hidden');
+      if (!settingsOpen && !pauseOpen) pauseGame();
+    }
+  });
+
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') {
       var settingsOpen = settingsPanel && !settingsPanel.classList.contains('hidden');
@@ -976,10 +986,20 @@
     if (e.key === 'ArrowDown') keys.p2Down = false;
   });
 
-  window.addEventListener('resize', function () {
+  function doResize() {
     resize();
     if (!gameRunning && !countdownActive) draw();
+  }
+
+  window.addEventListener('resize', doResize);
+  window.addEventListener('orientationchange', function () {
+    setTimeout(doResize, 100);
   });
+
+  if (typeof ResizeObserver !== 'undefined') {
+    var ro = new ResizeObserver(function () { doResize(); });
+    ro.observe(container);
+  }
 
   // ===== Init =====
   container.addEventListener('click', function (e) {
