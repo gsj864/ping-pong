@@ -149,10 +149,10 @@
   // ===== Utility =====
   function randDir() { return Math.random() > 0.5 ? 1 : -1; }
 
-  function serve() {
+  function serve(dir) {
     ball.x = 0.5;
     ball.y = 0.5;
-    const dir = randDir();
+    if (dir === undefined) dir = randDir();
     const mult = twoPlayerMode ? 0.75 : AI_SETTINGS[difficulty].ballSpeed;
     ball.vx = BALL_SPEED_BASE * mult * dir;
     ball.vy = 0;
@@ -270,10 +270,29 @@
     else endTitle.textContent = result ? 'YOU WIN!' : 'YOU LOSE';
     endScoreEl.textContent = scoreLeft + ' - ' + scoreRight;
     sound(isWin ? 'win' : 'lose');
-    var showRewarded = !isWin && !twoPlayerMode && rewardedBtn;
+    var showRewarded = !isWin && !twoPlayerMode && rewardedBtn && scoreRight > 0;
     if (rewardedBtn) {
       rewardedBtn.classList.toggle('hidden', !showRewarded);
     }
+  }
+
+  function reviveAndContinue() {
+    if (scoreRight <= 0) return;
+    scoreRight--;
+    updateScoreUI();
+    endScreen.classList.add('hidden');
+    if (rewardedBtn) rewardedBtn.classList.add('hidden');
+    gameRunning = true;
+    isPaused = false;
+    serveDelay = 0;
+    resize();
+    serve(1);
+    if (!twoPlayerMode) canvas.requestPointerLock();
+    startCountdown(function () {
+      lastTime = performance.now();
+      loop(lastTime);
+    });
+    if (gameMenuBtn) gameMenuBtn.classList.remove('hidden');
   }
 
   function updateScoreUI() {
@@ -706,8 +725,7 @@
       doResumeAfterAd();
       if (success) {
         Poki.gameplayStart();
-        startGame();
-        if (rewardedBtn) rewardedBtn.classList.add('hidden');
+        reviveAndContinue();
       }
     });
   }
