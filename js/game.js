@@ -285,9 +285,14 @@
     var mode = modeEl && modeEl.getAttribute ? modeEl.getAttribute('data-mode') : 'vsai';
     twoPlayerMode = mode === '2p';
     endlessMode = mode === 'endless';
-    if (!challengeMode) {
+    if (mode !== 'challenge') {
+      challengeMode = false;
       currentChallengeId = null;
       challengeWinScore = WIN_SCORE;
+      var chHud = document.getElementById('challenge-hud');
+      if (chHud) chHud.classList.add('hidden');
+      var pauseGoal = document.getElementById('pause-challenge-goal');
+      if (pauseGoal) { pauseGoal.style.display = 'none'; pauseGoal.textContent = ''; }
     }
     keys.p1Up = keys.p1Down = keys.p2Up = keys.p2Down = false;
     touchP1Y = touchP2Y = null;
@@ -310,6 +315,7 @@
     startScreen.classList.add('hidden');
     endScreen.classList.add('hidden');
     pauseScreen.classList.add('hidden');
+    countdownScreen.classList.add('hidden');
     if (typeof document !== 'undefined') {
       var cr = document.getElementById('challenge-result-screen');
       if (cr) cr.classList.add('hidden');
