@@ -776,8 +776,13 @@
         if (keys.p1Down) playerY += PADDLE_KEYBOARD_SPEED * dtNorm;
       }
     } else {
-      if (mouseLeftDown) playerY -= PADDLE_KEYBOARD_SPEED * dtNorm;
-      if (mouseRightDown) playerY += PADDLE_KEYBOARD_SPEED * dtNorm;
+      var touchY = touchP1Y !== null ? touchP1Y : touchP2Y;
+      if (touchY !== null) {
+        playerY += (touchY - playerY) * 0.4;
+      } else {
+        if (mouseLeftDown) playerY -= PADDLE_KEYBOARD_SPEED * dtNorm;
+        if (mouseRightDown) playerY += PADDLE_KEYBOARD_SPEED * dtNorm;
+      }
     }
     playerY = Math.max(0.12, Math.min(0.88, playerY));
     playerVelY = (playerY - prevPlayerY) / dtNorm;
@@ -1017,7 +1022,7 @@
     if (!gameRunning || isPaused) return;
     for (let i = 0; i < e.changedTouches.length; i++) {
       const t = e.changedTouches[i];
-      const side = getTouchSide(t.clientX);
+      const side = twoPlayerMode ? getTouchSide(t.clientX) : 'p1';
       touchMap[t.identifier] = side;
       const y = getTouchY(t.clientY);
       if (side === 'p1') touchP1Y = y;
