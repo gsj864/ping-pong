@@ -391,6 +391,8 @@
     countdownActive = false;
     challengeMode = false;
     currentChallengeId = null;
+    twoPlayerMode = false;
+    endlessMode = false;
     if (animId) cancelAnimationFrame(animId);
     animId = 0;
     startScreen.classList.remove('hidden');
@@ -404,6 +406,12 @@
     if (cr) cr.classList.add('hidden');
     if (cc) cc.classList.add('hidden');
     if (gameMenuBtn) gameMenuBtn.classList.add('hidden');
+    var modeBtnsList = document.querySelectorAll('.mode-btn');
+    if (modeBtnsList && modeBtnsList.length) {
+      modeBtnsList.forEach(function (b) {
+        b.classList.toggle('active', (b.getAttribute('data-mode') || '') === 'vsai');
+      });
+    }
     bgm.stop();
   }
 
@@ -851,11 +859,12 @@
     // Score
     const bx = ball.x * gameW;
     if (bx + r < 0) {
+      var isCh2Fail = challengeMode && currentChallengeId === 2;
       var isCh8Fail = challengeMode && currentChallengeId === 8;
       var isCh17Fail = challengeMode && currentChallengeId === 17 && scoreRight + 1 >= 3;
       var isRallyOrSurvival = challengeMode && currentChallengeId && (CHALLENGE_RALLY_TARGET[currentChallengeId] !== undefined || CHALLENGE_SURVIVAL_TARGET[currentChallengeId] !== undefined || CHALLENGE_CENTER_HIT_TARGET[currentChallengeId] !== undefined);
       var isGameOverFail = challengeMode && scoreRight + 1 >= getWinScore();
-      var isContinuableFail = isCh8Fail || isCh17Fail || isRallyOrSurvival || isGameOverFail;
+      var isContinuableFail = isCh2Fail || isCh8Fail || isCh17Fail || isRallyOrSurvival || isGameOverFail;
       if (isContinuableFail) {
         showChallengeContinueOffer();
         return;
