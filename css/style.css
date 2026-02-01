@@ -36,19 +36,26 @@
 }
 
 html, body {
-  width: 100%;
-  height: 100%;
-  min-height: 100%;
+  width: 100vw;
+  height: 100vh;
+  min-width: 100vw;
+  min-height: 100vh;
+  min-height: 100dvh; /* 동적 뷰포트: 모바일 주소창 대응 */
   overflow: hidden;
   font-family: 'Poppins', sans-serif;
   background: #1a1a2e;
   -webkit-tap-highlight-color: transparent;
   touch-action: none;
   user-select: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 #game-container {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
@@ -63,9 +70,8 @@ html, body {
   display: block;
   width: 100%;
   height: 100%;
-  min-width: 100%;
-  min-height: 100%;
   cursor: none;
+  vertical-align: top;
 }
 
 /* ===== Game Menu Button (Mobile-friendly) ===== */
@@ -118,11 +124,26 @@ html, body {
   left: 0;
   right: 0;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
   padding: 16px;
   pointer-events: none;
   z-index: 5;
 }
+
+.challenge-hud {
+  margin-top: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.95);
+  background: rgba(0,0,0,0.45);
+  padding: 6px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.2);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+.challenge-hud.hidden { display: none !important; }
 
 #score {
   display: flex;
@@ -369,6 +390,35 @@ html, body {
   box-shadow: 0 4px 20px rgba(124, 77, 255, 0.4);
 }
 
+.ball-speed-buttons {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.ball-speed-btn {
+  padding: clamp(8px, 2vh, 12px) clamp(14px, 3vw, 24px);
+  font-size: clamp(12px, 2.5vw, 14px);
+  font-weight: 600;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(0,0,0,0.25);
+  color: rgba(255,255,255,0.9);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.ball-speed-btn:hover {
+  background: rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.3);
+  color: #fff;
+}
+.ball-speed-btn.active {
+  background: linear-gradient(135deg, #7c4dff 0%, #448aff 100%);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(124, 77, 255, 0.4);
+}
+
 /* Volume Slider */
 .volume-control {
   display: flex;
@@ -497,6 +547,17 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ===== Pause & End ===== */
+.pause-challenge-goal {
+  font-size: 14px;
+  color: rgba(255,255,255,0.9);
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  background: rgba(0,0,0,0.25);
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.2);
+  line-height: 1.4;
+  text-align: center;
+}
 .pause-buttons, .end-buttons {
   display: flex;
   gap: 12px;
@@ -509,7 +570,17 @@ input[type="range"]::-moz-range-thumb {
   font-family: 'Russo One', sans-serif;
   font-size: 28px;
   color: rgba(255,255,255,0.8);
+  margin-bottom: 12px;
+}
+
+.end-subtitle {
+  font-size: 16px;
+  color: rgba(255,255,255,0.75);
   margin-bottom: 28px;
+  font-style: italic;
+  max-width: 280px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 #end-screen.win .overlay-title {
@@ -521,6 +592,69 @@ input[type="range"]::-moz-range-thumb {
   color: #ff7043;
   text-shadow: 0 0 30px rgba(255, 112, 67, 0.6);
 }
+
+/* ===== Challenge Mode ===== */
+.challenge-content {
+  max-width: 560px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+.challenge-description {
+  font-size: 14px;
+  color: rgba(255,255,255,0.9);
+  margin: 12px 0 16px;
+  padding: 12px;
+  background: rgba(0,0,0,0.25);
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.15);
+  min-height: 2.5em;
+  line-height: 1.4;
+}
+.challenge-list-row {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-top: 8px;
+}
+.challenge-tier-col {
+  flex: 1;
+  min-width: 0;
+}
+.challenge-tier-title {
+  font-size: 14px;
+  margin: 0 0 8px;
+  color: rgba(255,255,255,0.9);
+}
+.challenge-stage-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  margin: 4px 0;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.3);
+  background: rgba(0,0,0,0.2);
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+}
+.challenge-stage-btn:hover { background: rgba(255,255,255,0.1); }
+.challenge-stage-btn.challenge-cleared {
+  background: rgba(46, 125, 50, 0.45);
+  border-color: rgba(76, 175, 80, 0.6);
+}
+.challenge-stage-btn.challenge-cleared:hover {
+  background: rgba(56, 142, 60, 0.55);
+}
+.challenge-stage-btn.selected {
+  border-color: #4fc3f7 !important;
+  background: rgba(79,195,247,0.15) !important;
+  box-shadow: 0 0 12px rgba(79,195,247,0.3);
+}
+.challenge-stage-btn:disabled,
+.challenge-stage-btn[style*="cursor: not-allowed"] { opacity: 0.6; cursor: not-allowed; }
+#challenge-play-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+#challenge-result-screen .overlay-title { transition: color 0.2s; }
 
 /* ===== Responsive ===== */
 @media (max-width: 480px), (max-height: 420px) {
@@ -538,7 +672,8 @@ input[type="range"]::-moz-range-thumb {
   .color-preset { width: 28px; height: 28px; font-size: 9px; }
   .color-picker-wrap input[type="color"] { width: 28px; height: 28px; }
   .countdown-number { font-size: 60px; }
-  .end-score { font-size: 22px; margin-bottom: 16px; }
+  .end-score { font-size: 22px; margin-bottom: 12px; }
+  .end-subtitle { font-size: 14px; margin-bottom: 16px; }
   .game-menu-btn { width: 40px; height: 40px; font-size: 20px; bottom: 12px; right: 12px; }
 }
 
@@ -551,5 +686,15 @@ input[type="range"]::-moz-range-thumb {
     transform: scale(0.72);
     transform-origin: center center;
     padding: 8px 12px;
+  }
+}
+
+/* Challenge list: narrow screens → stack tiers vertically */
+@media (max-width: 520px) {
+  .challenge-list-row {
+    flex-direction: column;
+  }
+  .challenge-content {
+    max-width: 100%;
   }
 }

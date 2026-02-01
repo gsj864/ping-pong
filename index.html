@@ -3,11 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="description" content="Play Edge Ping Pong for free! Classic table tennis game. First to 10 wins!">
+  <meta name="description" content="Play Edge Ping Pong for free! Classic table tennis game. First to 5 wins!">
   <meta name="theme-color" content="#1a1a2e">
   <title>Edge Ping Pong</title>
   <link rel="stylesheet" href="css/style.css">
-  <script src="https://game-cdn.poki.com/scripts/v2/poki-sdk.js"></script>
+  <script>
+    (function () {
+      var isLocal = location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+      if (!isLocal) {
+        document.write('<script src="https://game-cdn.poki.com/scripts/v2/poki-sdk.js"><\/script>');
+      }
+    })();
+  </script>
 </head>
 <body>
   <div id="game-container">
@@ -23,18 +30,23 @@
         <span id="score-sep">-</span>
         <span id="score-right" class="score-num">0</span>
       </div>
+      <div id="challenge-hud" class="challenge-hud hidden">
+        <span id="challenge-hud-text"></span>
+      </div>
     </div>
 
     <!-- Start Screen -->
     <div id="start-screen" class="overlay">
       <div class="overlay-content" id="start-content">
         <h1 class="game-title">EDGE PING PONG</h1>
-        <p class="game-subtitle" id="controls-hint">Move your mouse to control the paddle.<br>First to 10 wins!</p>
+        <p class="game-subtitle" id="controls-hint">Move your mouse to control the paddle.<br>First to 5 wins!</p>
         <div class="settings-group">
           <label class="setting-label">Mode</label>
           <div class="mode-buttons">
-            <button class="mode-btn active" data-mode="vsai">1 Player (Mouse)</button>
+            <button class="mode-btn active" data-mode="vsai">1 Player (Click)</button>
             <button class="mode-btn" data-mode="2p">2 Player (Keyboard)</button>
+            <button class="mode-btn" data-mode="endless">Endless</button>
+            <button class="mode-btn" data-mode="challenge" id="challenge-btn">🎯 Challenge</button>
           </div>
         </div>
         <div class="settings-group" id="difficulty-group-main">
@@ -45,9 +57,55 @@
             <button class="diff-btn" data-difficulty="hard">Hard</button>
           </div>
         </div>
+        <div class="settings-group" id="ball-speed-group-main" style="display:none">
+          <label class="setting-label">Ball Speed</label>
+          <div class="ball-speed-buttons">
+            <button class="ball-speed-btn" data-speed="0.55">Slow</button>
+            <button class="ball-speed-btn active" data-speed="0.75">Normal</button>
+            <button class="ball-speed-btn" data-speed="1">Fast</button>
+          </div>
+        </div>
         <div class="start-buttons">
-          <button id="play-btn" class="btn-primary">PLAY</button>
-          <button id="settings-btn" class="btn-secondary">⚙ Settings</button>
+          <button id="play-btn" class="btn-primary" type="button" onclick="window.edgePongClick && window.edgePongClick('play-btn')">PLAY</button>
+          <button id="settings-btn" class="btn-secondary" type="button" onclick="window.edgePongClick && window.edgePongClick('settings-btn')">⚙ Settings</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Challenge Mode: Stage Select -->
+    <div id="challenge-screen" class="overlay hidden">
+      <div class="overlay-content challenge-content">
+        <h2 class="overlay-title">🎯 CHALLENGE MODE</h2>
+        <p class="game-subtitle">Select a stage, then press PLAY to start.</p>
+        <div id="challenge-description" class="challenge-description">Select a stage below.</div>
+        <div id="challenge-list"></div>
+        <div class="start-buttons" style="margin-top:16px">
+          <button id="challenge-play-btn" class="btn-primary" type="button" disabled>PLAY</button>
+          <button id="challenge-back-btn" class="btn-secondary" type="button" onclick="window.edgePongClick && window.edgePongClick('challenge-back-btn')">BACK</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Challenge Fail – Watch Ad to Continue -->
+    <div id="challenge-continue-screen" class="overlay hidden">
+      <div class="overlay-content">
+        <h2 class="overlay-title" style="color:#ff7043">FAILED</h2>
+        <p class="game-subtitle" id="challenge-continue-msg">Watch an ad to continue the challenge.</p>
+        <div class="end-buttons">
+          <button id="challenge-continue-ad-btn" class="btn-primary btn-rewarded">Watch Ad – Continue</button>
+          <button id="challenge-continue-giveup-btn" class="btn-secondary">Give Up</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Challenge Result (overlay after game in challenge mode) -->
+    <div id="challenge-result-screen" class="overlay hidden">
+      <div class="overlay-content">
+        <h2 class="overlay-title" id="challenge-result-title">CHALLENGE CLEAR!</h2>
+        <p class="game-subtitle" id="challenge-result-msg"></p>
+        <div class="end-buttons">
+          <button id="challenge-retry-btn" class="btn-primary">RETRY</button>
+          <button id="challenge-result-back-btn" class="btn-secondary">CHALLENGE LIST</button>
         </div>
       </div>
     </div>
@@ -133,7 +191,7 @@
           </div>
         </div>
 
-        <button id="settings-close-btn" class="btn-primary">Close</button>
+        <button id="settings-close-btn" class="btn-primary" type="button" onclick="window.edgePongClick && window.edgePongClick('settings-close-btn')">Close</button>
       </div>
     </div>
 
@@ -142,10 +200,27 @@
       <div class="countdown-number" id="countdown-num">3</div>
     </div>
 
-    <!-- Pause Screen -->
+    <!-- Pause Screen (Endless 전용: 게임 중 난이도 변경) -->
     <div id="pause-screen" class="overlay hidden">
       <div class="overlay-content">
         <h2 class="overlay-title">PAUSED</h2>
+        <p id="pause-challenge-goal" class="pause-challenge-goal" style="display:none"></p>
+        <div class="settings-group" id="pause-difficulty-group" style="display:none">
+          <label class="setting-label">Difficulty</label>
+          <div class="difficulty-buttons">
+            <button class="diff-btn" data-difficulty="easy">Easy</button>
+            <button class="diff-btn active" data-difficulty="normal">Normal</button>
+            <button class="diff-btn" data-difficulty="hard">Hard</button>
+          </div>
+        </div>
+        <div class="settings-group" id="pause-ball-speed-group" style="display:none">
+          <label class="setting-label">Ball Speed</label>
+          <div class="ball-speed-buttons">
+            <button class="ball-speed-btn" data-speed="0.55">Slow</button>
+            <button class="ball-speed-btn active" data-speed="0.75">Normal</button>
+            <button class="ball-speed-btn" data-speed="1">Fast</button>
+          </div>
+        </div>
         <div class="pause-buttons">
           <button id="resume-btn" class="btn-primary">RESUME</button>
           <button id="settings-btn-pause" class="btn-secondary">⚙ Settings</button>
@@ -158,7 +233,8 @@
     <div id="end-screen" class="overlay hidden">
       <div class="overlay-content">
         <h2 class="overlay-title" id="end-title">P1 WINS!</h2>
-        <p class="end-score" id="end-score">10 - 5</p>
+        <p class="end-score" id="end-score">3 - 5</p>
+        <p class="end-subtitle" id="end-subtitle" aria-hidden="true"></p>
         <div class="end-buttons">
           <button id="replay-btn" class="btn-primary">PLAY AGAIN</button>
           <button id="rewarded-btn" class="btn-rewarded hidden">Watch Ad – Undo Last Point</button>
@@ -168,6 +244,7 @@
     </div>
   </div>
 
+  <script src="js/challenges.js"></script>
   <script src="js/game.js"></script>
 </body>
 </html>
